@@ -21,10 +21,14 @@ def run_pipeline():
         segments = extract_timestamps(audio_file)
 
         build_final_video(segments, audio_file, video_file)
-
+# Inside main.py
         if sa_json:
             url = upload_to_drive(video_file, "video/mp4", sa_json)
             print(f"SUCCESS! Video uploaded successfully. View here: {url}")
+
+            # Write the URL to the GitHub Actions environment variables
+            with open(os.environ['GITHUB_ENV'], 'a') as f:
+                f.write(f"VIDEO_URL={url}\n")
         else:
             print("Finished! No Google Drive credentials found, skipped upload.")
 
