@@ -1,0 +1,41 @@
+name: Generate AI Video Job
+
+on:
+  repository_dispatch:
+    types: [generate_video_job]
+
+jobs:
+  build_video:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install System Dependencies (FFmpeg)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create Google Service Account Credentials File
+        run: |
+          echo "${{ secrets.GDRIVE_SERVICE_ACCOUNT_KEY_BASE64 }}" | base64 -d > service_account.json
+
+      - name: Execute Video Pipeline
+        env:
+          SCRIPT_TEXT: ${{ github.event.client_payload.script_text }}
+          DRIVE_FOLDER_ID: ${{ github.event.client_payload.drive_folder_id }}
+          USER_EMAIL: ${{ github.event.client_payload.user_email }}
+        run: |
+          python scripts/main.py

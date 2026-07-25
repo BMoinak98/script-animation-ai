@@ -1,0 +1,6 @@
+gtts
+openai-whisper
+aiohttp
+google-api-python-client
+google-auth
+torch
