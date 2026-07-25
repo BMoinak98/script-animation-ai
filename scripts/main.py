@@ -1,39 +1,36 @@
 import os
-import json
-import asyncio
-from tts_transcribe import generate_audio_and_timestamps
-from fetch_images import fetch_all_images
-from render_video import create_video_from_frames
-from drive_uploader import upload_folder_contents
+from tts_engine import create_master_audio
+from transcriber import extract_timestamps
+from video_assembler import build_final_video
+from gdrive_utils import upload_to_drive
 
-def main():
-    script_text = os.environ.get("SCRIPT_TEXT")
-    drive_folder_id = os.environ.get("DRIVE_FOLDER_ID")
+def run_pipeline():
+    # 1. Fetch parameters from GitHub Actions Environment
+    script_text = os.getenv("SCRIPT_TEXT", "This is a fallback test script.")
+    language = os.getenv("LANGUAGE", "english").lower()
+    gender = os.getenv("VOICE_GENDER", "female").lower()
+    sa_json = os.getenv("GDRIVE_SERVICE_ACCOUNT_JSON")
 
-    work_dir = "output_job"
-    os.makedirs(work_dir, exist_ok=True)
+    audio_file = "master_audio.wav"
+    video_file = "final_animation.mp4"
 
-    # 1. Audio & Forced Alignment
-    print("Generating audio and alignment...")
-    audio_path, sentences = generate_audio_and_timestamps(script_text, work_dir)
+    # 2. Pipeline Execution
+    try:
+        create_master_audio(script_text, language, gender, audio_file)
 
-    # Save transcript file as JSON
-    with open(os.path.join(work_dir, "transcript.json"), "w") as f:
-        json.dump(sentences, f, indent=2)
+        segments = extract_timestamps(audio_file)
 
-    # 2. Fetch Images Asynchronously
-    print("Fetching images in parallel...")
-    image_paths = asyncio.run(fetch_all_images(sentences, work_dir))
+        build_final_video(segments, audio_file, video_file)
 
-    # 3. Render MP4
-    print("Rendering video with FFmpeg...")
-    output_mp4 = os.path.join(work_dir, "final_video.mp4")
-    create_video_from_frames(sentences, image_paths, audio_path, output_mp4)
+        if sa_json:
+            url = upload_to_drive(video_file, "video/mp4", sa_json)
+            print(f"SUCCESS! Video uploaded successfully. View here: {url}")
+        else:
+            print("Finished! No Google Drive credentials found, skipped upload.")
 
-    # 4. Upload Assets to Google Drive
-    print("Uploading output assets to Google Drive...")
-    upload_folder_contents(work_dir, drive_folder_id)
-    print("Job Completed Successfully!")
+    except Exception as e:
+        print(f"Pipeline failed: {e}")
+        exit(1)
 
 if __name__ == "__main__":
-    main()
+    run_pipeline()

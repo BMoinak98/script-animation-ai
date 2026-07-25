@@ -1,6 +1,11 @@
-gtts
+kokoro-onnx
+soundfile
+torch --index-url https://download.pytorch.org/whl/cpu
+transformers
 openai-whisper
-aiohttp
+moviepy==1.0.3
+requests
 google-api-python-client
 google-auth
-torch
+deep-translator
+numpy
