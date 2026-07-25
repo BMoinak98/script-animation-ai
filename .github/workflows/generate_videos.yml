@@ -34,7 +34,7 @@ jobs:
           LANGUAGE: ${{ github.event.client_payload.language }}
           VOICE_GENDER: ${{ github.event.client_payload.voice_gender }}
           GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
-        run: python main.py
+        run: python scripts/main.py
 
       - name: Send Email via Google Apps Script Webhook
         if: success()
