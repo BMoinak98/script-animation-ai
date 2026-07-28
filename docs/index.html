@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Media Production Portal</title>
+    <title>AI Voice & Content Portal</title>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
@@ -20,7 +21,7 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          font-family: system-ui, -apple-system, sans-serif;
           background-color: var(--bg);
           color: var(--text);
           display: flex;
@@ -36,12 +37,12 @@
           border-radius: 12px;
           padding: 32px;
           width: 100%;
-          max-width: 480px;
+          max-width: 560px;
           box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
         }
 
-        h1 { font-size: 1.5rem; margin-bottom: 8px; font-weight: 600; }
-        p.subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+        h1 { font-size: 1.5rem; margin-bottom: 6px; font-weight: 600; }
+        p.subtitle { color: var(--muted); font-size: 0.875rem; margin-bottom: 24px; }
 
         .user-badge {
           background: #090d16;
@@ -50,25 +51,33 @@
           border-radius: 8px;
           font-size: 0.85rem;
           margin-bottom: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
         }
 
-        .form-group { margin-bottom: 18px; }
+        .form-group { margin-bottom: 16px; }
         label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 6px; color: var(--muted); }
 
-        select, input[type="url"] {
+        select, textarea {
           width: 100%;
-          padding: 10px 12px;
+          padding: 12px;
           background: #0f172a;
           border: 1px solid var(--border);
           border-radius: 6px;
           color: var(--text);
           font-size: 0.95rem;
           outline: none;
+          font-family: inherit;
         }
-        select:focus, input[type="url"]:focus { border-color: var(--primary); }
+
+        textarea {
+          min-height: 160px;
+          resize: vertical;
+          line-height: 1.5;
+        }
+
+        select:focus, textarea:focus { border-color: var(--primary); }
+
+        .row { display: flex; gap: 12px; }
+        .row .form-group { flex: 1; }
 
         button.btn-submit {
           width: 100%;
@@ -80,6 +89,7 @@
           font-weight: 600;
           font-size: 0.95rem;
           cursor: pointer;
+          margin-top: 8px;
           transition: background 0.2s ease;
         }
         button.btn-submit:hover { background-color: var(--primary-hover); }
@@ -87,7 +97,7 @@
 
         #statusMessage {
           margin-top: 16px;
-          font-size: 0.85rem;
+          font-size: 0.875rem;
           text-align: center;
           display: none;
         }
@@ -96,12 +106,12 @@
 <body>
 
 <div class="card">
-    <h1>AI Pipeline Request</h1>
-    <p class="subtitle">Authenticate with Google to submit generation tasks.</p>
+    <h1>AI Production Studio</h1>
+    <p class="subtitle">Paste your script below to generate audio, transcriptions, and video.</p>
 
     <div id="authSection">
         <div id="g_id_onload"
-             data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+             data-client_id="955507763946-1dm5gsjahf8hq824m50tdf7ldeo29mqg.apps.googleusercontent.com"
              data-callback="handleCredentialResponse">
         </div>
         <div class="g_id_signin" data-type="standard" data-size="large" data-theme="dark" data-width="100%"></div>
@@ -109,43 +119,58 @@
 
     <div id="formSection" style="display: none;">
         <div class="user-badge">
-            <span>Logged in as: <b id="userEmail"></b></span>
+            <span>Authenticated as: <b id="userEmail"></b></span>
         </div>
 
         <form id="pipelineForm" onsubmit="submitForm(event)">
+
             <div class="form-group">
-                <label for="choice">Pipeline Mode</label>
-                <select id="choice" required>
-                    <option value="audio">Audio / Transcribe Only</option>
-                    <option value="video">Full Video Generation</option>
+                <label for="scriptText">Paste Script Text</label>
+                <textarea id="scriptText" placeholder="Paste your story, article, or video script here..." required></textarea>
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label for="language">Language</label>
+                    <select id="language">
+                        <option value="english">English</option>
+                        <option value="hindi">Hindi</option>
+                        <option value="bengali">Bengali</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="voiceGender">Voice Gender</label>
+                    <select id="voiceGender">
+                        <option value="female">Female</option>
+                        <option value="male">Male</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="mode">Output Mode</label>
+                <select id="mode" required>
+                    <option value="audio">Audio & Transcription Only</option>
+                    <option value="video">Full Animated Video</option>
                 </select>
             </div>
 
-            <div class="form-group">
-                <label for="fileUrl">Source File URL (Google Drive / Direct Link)</label>
-                <input type="url" id="fileUrl" placeholder="https://..." required>
-            </div>
-
-            <button type="submit" id="submitBtn" class="btn-submit">Submit Pipeline Job</button>
+            <button type="submit" id="submitBtn" class="btn-submit">Generate Content</button>
         </form>
         <div id="statusMessage"></div>
     </div>
 </div>
 
 <script>
-    // Configuration
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJY35rkPAtbSEsdTAQ9NxxvmAjuh3Cdxnl_pYRgNQWHUJMGWc451GHNIlfIWiK3DoLmg/exec";
     let googleIdToken = null;
 
-    // Called automatically by Google SDK upon successful sign in
     function handleCredentialResponse(response) {
-      googleIdToken = response.credential; // Signed JWT token from Google
-
-      // Extract user email from JWT token payload to render on UI
+      googleIdToken = response.credential;
       const payload = JSON.parse(atob(googleIdToken.split('.')[1]));
       document.getElementById("userEmail").innerText = payload.email;
 
-      // Swap Auth button for Form UI
       document.getElementById("authSection").style.display = "none";
       document.getElementById("formSection").style.display = "block";
     }
@@ -160,16 +185,17 @@
       submitBtn.innerText = "Submitting...";
       statusMsg.style.display = "block";
       statusMsg.style.color = "#94a3b8";
-      statusMsg.innerText = "Processing request...";
+      statusMsg.innerText = "Sending script to pipeline...";
 
       const payload = {
         id_token: googleIdToken,
-        choice: document.getElementById("choice").value,
-        file_url: document.getElementById("fileUrl").value
+        script_text: document.getElementById("scriptText").value,
+        language: document.getElementById("language").value,
+        voice_gender: document.getElementById("voiceGender").value,
+        mode: document.getElementById("mode").value
       };
 
       try {
-        // Mode 'no-cors' is required due to Google Apps Script HTTP redirect response behavior
         await fetch(APPS_SCRIPT_URL, {
           method: "POST",
           mode: "no-cors",
@@ -178,14 +204,14 @@
         });
 
         statusMsg.style.color = "#4ade80";
-        statusMsg.innerText = "Request submitted successfully! Check your email for status updates.";
-        document.getElementById("fileUrl").value = "";
+        statusMsg.innerText = "Script submitted! Check your email shortly for the Google Drive links.";
+        document.getElementById("scriptText").value = "";
       } catch (err) {
         statusMsg.style.color = "#f87171";
         statusMsg.innerText = "Submission failed: " + err.message;
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerText = "Submit Pipeline Job";
+        submitBtn.innerText = "Generate Content";
       }
     }
 </script>
