@@ -9,3 +9,7 @@ google-api-python-client
 google-auth
 deep-translator
 numpy
+google-genai
+resvg-py
+pillow
+deep-translator

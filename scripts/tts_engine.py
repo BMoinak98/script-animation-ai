@@ -24,7 +24,7 @@ def chunk_text(text: str, max_length: int = 200):
 def generate_english_tts(text: str, gender: str) -> np.ndarray:
     try:
         from kokoro_onnx import Kokoro
-        kokoro = Kokoro("kokoro-v0_19.onnx", "voices.json")
+        kokoro = Kokoro("kokoro-v0_19.onnx", "voices.bin")
         voice_style = "af_sarah" if gender == "female" else "am_adam"
         samples, _ = kokoro.create(text, voice=voice_style, speed=1.0, lang="en-us")
         return samples

@@ -1,3 +1,9 @@
+import os
+import ssl
+
+# Bypass SSL locally for macOS, but keep it secure in production
+if not os.getenv("GITHUB_ACTIONS"):
+    ssl._create_default_https_context = ssl._create_unverified_context
 import whisper
 
 def extract_timestamps(audio_path: str):

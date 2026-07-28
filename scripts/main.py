@@ -1,40 +1,71 @@
 import os
+import sys
+import json
 from tts_engine import create_master_audio
 from transcriber import extract_timestamps
+from prompt_generator import generate_global_storyboard
 from video_assembler import build_final_video
 from gdrive_utils import upload_to_drive
 
 def run_pipeline():
-    # 1. Fetch parameters from GitHub Actions Environment
-    script_text = os.getenv("SCRIPT_TEXT", "This is a fallback test script.")
+    script_text = os.getenv("SCRIPT_TEXT", "This is a default test script for automated generation.")
     language = os.getenv("LANGUAGE", "english").lower()
     gender = os.getenv("VOICE_GENDER", "female").lower()
+    mode = os.getenv("PIPELINE_MODE", "audio").lower()
     sa_json = os.getenv("GDRIVE_SERVICE_ACCOUNT_JSON")
 
     audio_file = "master_audio.wav"
+    transcript_file = "transcript.json"
     video_file = "final_animation.mp4"
 
-    # 2. Pipeline Execution
+    uploaded_urls = {
+        "audio": "",
+        "transcript": "",
+        "video": ""
+    }
+
     try:
+        # Step 1: Create Audio Track
+        print(f"[Main] Mode: {mode.upper()} | Language: {language} | Gender: {gender}")
         create_master_audio(script_text, language, gender, audio_file)
 
+        # Step 2: Extract Timestamp Alignment & Save Transcript File
         segments = extract_timestamps(audio_file)
 
-        build_final_video(segments, audio_file, video_file)
-# Inside main.py
-        if sa_json:
-            url = upload_to_drive(video_file, "video/mp4", sa_json)
-            print(f"SUCCESS! Video uploaded successfully. View here: {url}")
+        with open(transcript_file, "w", encoding="utf-8") as f:
+            json.dump(segments, f, indent=2, ensure_ascii=False)
+        print(f"[Main] Saved transcription file to {transcript_file}")
 
-            # Write the URL to the GitHub Actions environment variables
+        # Step 3: Upload Audio and Transcript to Google Drive
+        if sa_json:
+            print("[Main] Uploading master audio to Google Drive...")
+            uploaded_urls["audio"] = upload_to_drive(audio_file, "audio/wav", sa_json)
+
+            print("[Main] Uploading transcript JSON to Google Drive...")
+            uploaded_urls["transcript"] = upload_to_drive(transcript_file, "application/json", sa_json)
+
+        # Step 4: Video Generation (if Video Mode selected)
+        if mode == "video":
+            print("[Main] Generating Global Storyboard & Video...")
+            storyboard_data = generate_global_storyboard(script_text, segments)
+            build_final_video(segments, storyboard_data, audio_file, video_file)
+
+            if sa_json:
+                print("[Main] Uploading video MP4 to Google Drive...")
+                uploaded_urls["video"] = upload_to_drive(video_file, "video/mp4", sa_json)
+
+        # Step 5: Output Environment Variables for GitHub Actions runner
+        if "GITHUB_ENV" in os.environ:
             with open(os.environ['GITHUB_ENV'], 'a') as f:
-                f.write(f"VIDEO_URL={url}\n")
-        else:
-            print("Finished! No Google Drive credentials found, skipped upload.")
+                f.write(f"AUDIO_URL={uploaded_urls['audio']}\n")
+                f.write(f"TRANSCRIPT_URL={uploaded_urls['transcript']}\n")
+                f.write(f"VIDEO_URL={uploaded_urls['video']}\n")
+
+        print(f"[Main] Pipeline completed! Uploaded Artifacts: {uploaded_urls}")
 
     except Exception as e:
         print(f"Pipeline failed: {e}")
-        exit(1)
+        sys.exit(1)
 
 if __name__ == "__main__":
     run_pipeline()

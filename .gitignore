@@ -1,0 +1,4 @@
+# AI Models
+scripts/kokoro-v0_19.onnx
+scripts/voices.bin
+scripts/.env
