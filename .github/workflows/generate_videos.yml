@@ -40,7 +40,7 @@ jobs:
           VOICE_GENDER: ${{ github.event.client_payload.voice_gender }}
           PIPELINE_MODE: ${{ github.event.client_payload.pipeline_mode }}
           GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
-        run: python main.py
+        run: python scripts/main.py
 
       - name: Send Artifact Links via Google Apps Script Webhook
         if: success()
