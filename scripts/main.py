@@ -12,7 +12,6 @@ def run_pipeline():
     language = os.getenv("LANGUAGE", "english").lower()
     gender = os.getenv("VOICE_GENDER", "female").lower()
     mode = os.getenv("PIPELINE_MODE", "audio").lower()
-    sa_json = os.getenv("GDRIVE_SERVICE_ACCOUNT_JSON")
 
     audio_file = "master_audio.wav"
     transcript_file = "transcript.json"
@@ -39,10 +38,10 @@ def run_pipeline():
         # Step 3: Upload Audio and Transcript to Google Drive
         if sa_json:
             print("[Main] Uploading master audio to Google Drive...")
-            uploaded_urls["audio"] = upload_to_drive(audio_file, "audio/wav", sa_json)
+            uploaded_urls["audio"] = upload_to_drive(audio_file, "audio/wav")
 
             print("[Main] Uploading transcript JSON to Google Drive...")
-            uploaded_urls["transcript"] = upload_to_drive(transcript_file, "application/json", sa_json)
+            uploaded_urls["transcript"] = upload_to_drive(transcript_file, "application/json")
 
         # Step 4: Video Generation (if Video Mode selected)
         if mode == "video":
@@ -52,7 +51,7 @@ def run_pipeline():
 
             if sa_json:
                 print("[Main] Uploading video MP4 to Google Drive...")
-                uploaded_urls["video"] = upload_to_drive(video_file, "video/mp4", sa_json)
+                uploaded_urls["video"] = upload_to_drive(video_file, "video/mp4")
 
         # Step 5: Output Environment Variables for GitHub Actions runner
         if "GITHUB_ENV" in os.environ:
