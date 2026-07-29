@@ -36,12 +36,11 @@ def run_pipeline():
         print(f"[Main] Saved transcription file to {transcript_file}")
 
         # Step 3: Upload Audio and Transcript to Google Drive
-        if sa_json:
-            print("[Main] Uploading master audio to Google Drive...")
-            uploaded_urls["audio"] = upload_to_drive(audio_file, "audio/wav")
+        print("[Main] Uploading master audio to Google Drive...")
+        uploaded_urls["audio"] = upload_to_drive(audio_file, "audio/wav")
 
-            print("[Main] Uploading transcript JSON to Google Drive...")
-            uploaded_urls["transcript"] = upload_to_drive(transcript_file, "application/json")
+        print("[Main] Uploading transcript JSON to Google Drive...")
+        uploaded_urls["transcript"] = upload_to_drive(transcript_file, "application/json")
 
         # Step 4: Video Generation (if Video Mode selected)
         if mode == "video":
@@ -49,9 +48,8 @@ def run_pipeline():
             storyboard_data = generate_global_storyboard(script_text, segments)
             build_final_video(segments, storyboard_data, audio_file, video_file)
 
-            if sa_json:
-                print("[Main] Uploading video MP4 to Google Drive...")
-                uploaded_urls["video"] = upload_to_drive(video_file, "video/mp4")
+            print("[Main] Uploading video MP4 to Google Drive...")
+            uploaded_urls["video"] = upload_to_drive(video_file, "video/mp4")
 
         # Step 5: Output Environment Variables for GitHub Actions runner
         if "GITHUB_ENV" in os.environ:
