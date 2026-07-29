@@ -1,7 +1,7 @@
 import json
 from google import genai
 from google.genai import types
-from scripts.gemini_helper import get_gemini_token
+from gemini_helper import get_gemini_token
 
 def generate_global_storyboard(script_text: str, segments: list) -> dict:
     api_key = get_gemini_token()
