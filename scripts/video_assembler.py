@@ -104,7 +104,6 @@ def build_final_video(segments: list, storyboard_data: dict, audio_path: str, ou
 
         # Fallback if image generation failed
         if not os.path.exists(img_path):
-            from PIL import Image
             Image.new("RGB", (1920, 1080), "#f8f9fa").save(img_path)
 
         pil_img = Image.open(img_path).convert("RGB")
